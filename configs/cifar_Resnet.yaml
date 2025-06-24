@@ -1,0 +1,7 @@
+model: 'Resnet'
+training:
+  epochs: 25
+  learning_rate: 0.001
+  batch_size: 128
+
+

@@ -1,0 +1,16 @@
+dataset: "MNIST"
+loader: "MNIST"
+directory: "MNIST"
+N: 10000
+K: 500
+
+bayes_model: "CNN"
+training:
+  epochs: 20
+  learning_rate: 0.001
+  batch_size: 128
+
+models:
+  - ./configs/mnist_Linear.yaml
+  - ./configs/mnist_CNN.yaml
+
