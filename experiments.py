@@ -79,7 +79,7 @@ def main(config_file):
         print(loo_preds)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='My Script')
-    parser.add_argument('config_file', type=str, help='Path to config file')
+    parser = argparse.ArgumentParser(description='Train Bayes and Leave-one-out Models')
+    parser.add_argument('--config_file', type=str, required=True, help='Path to config file')
     args = parser.parse_args()
     main(args.config_file)
