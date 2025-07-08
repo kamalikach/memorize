@@ -1,0 +1,16 @@
+dataset: "CIFAR"
+loader: "TensorDS"
+directory: "CIFAR0.1"
+N: 40000
+K: 500
+
+bayes_model: "Resnet"
+training:
+  epochs: 75
+  learning_rate: 0.001
+  batch_size: 128
+
+models:
+  - ./configs/cifar_Linear.yaml
+  - ./configs/cifar_Resnet.yaml
+

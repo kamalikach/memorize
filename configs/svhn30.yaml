@@ -1,0 +1,18 @@
+dataset: "SVHN"
+loader: "SVHN"
+directory: "SVHN"
+N: 30000
+K: 500
+
+bayes_model: "VGG"
+training:
+  epochs: 50
+  learning_rate: 0.001
+  batch_size: 128
+
+models:
+  - ./configs/svhn_Linear.yaml
+  - ./configs/svhn_CNN.yaml
+  - ./configs/svhn_VGG.yaml
+
+

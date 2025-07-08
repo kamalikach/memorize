@@ -1,0 +1,16 @@
+dataset: "MNIST"
+loader: "TensorDS"
+directory: "MNIST0.1"
+N: 30000
+K: 500
+
+bayes_model: "CNN"
+training:
+  epochs: 50
+  learning_rate: 0.001
+  batch_size: 128
+
+models:
+  - ./configs/mnist0.1_Linear.yaml
+  - ./configs/mnist0.1_CNN.yaml
+
