@@ -4,12 +4,62 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.optim as optim
 from torchvision.models import resnet18
+import importlib
+from itertools import product
 
 import yaml
 
 def load_config(path):
     with open(path, "r") as f:
         return yaml.safe_load(f)
+
+###########data analysis functions
+
+def print_statistics(correct):
+    print('Bayes :', count_rows_matching_pattern(correct, [ True, '*', '*' ]))
+    print('f(S-x):', count_rows_matching_pattern(correct, [ '*', True, '*' ]))
+    print('f(S  ):', count_rows_matching_pattern(correct, [ '*', '*', True ]))
+
+    options = [True, False]
+
+    for combo in product(options, repeat=3):
+        print(list(combo), count_rows_matching_pattern(correct, list(combo)))
+
+def analyze_data(dataset_name, directory, model, K):
+    #first load the various statistics and real labels
+    bayes = torch.load(directory+'bayes_preds.pt')
+    loo = torch.load(directory+model+'_loopreds.pt')
+
+    data_module = importlib.import_module(dataset_name)
+    train_dataset, nn_train_dataset, test_dataset = data_module.load(dataset=dataset_name, directory='./data/'+dataset_name+'/')
+    indices = torch.load(directory+'indices.pt')[0:K]
+    real_labels = [train_dataset[i][1] for i in indices]
+
+    #now calculate the two combined tables -- one wrt noisy labels, other real labels
+    bayes_correct = [ [ a[0] == a[1] ] for a in bayes ]
+    loo_correct = [ [ a[0] == a[1], a[0] == a[2]] for a in loo ]
+    combined_correct = torch.tensor([ ai + bi for ai, bi in zip(bayes_correct, loo_correct) ])
+    
+    ######another way: pretend bayes predictions are the real labels
+    bayes_correct_real = [ [ a[0] == b ] for a, b in zip(bayes, real_labels) ]
+    combined_correct_real = torch.tensor( [ ai + bi for ai, bi in zip(bayes_correct_real, loo_correct) ] )
+
+    return combined_correct, combined_correct_real
+
+def count_rows_matching_pattern(A, pattern):
+    ##args: A (torch.Tensor): Boolean tensor of shape [n, 3].
+    #pattern (list): List of length 3 with elements True, False, or '*'.
+ 
+    if A.shape[1] != len(pattern):
+        raise ValueError("Pattern length must match number of columns in A")
+    mask = torch.ones(A.size(0), dtype=torch.bool)  # start with all True
+    for col_idx, pat_val in enumerate(pattern):
+        if pat_val == '*':
+            continue  # wildcard, ignore this column
+        else:
+            mask = mask & (A[:, col_idx] == pat_val)
+
+    return mask.sum().item()
 
 
 ##############basic training and test functions
