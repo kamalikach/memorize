@@ -6,6 +6,9 @@ import torch.optim as optim
 from torchvision.models import resnet18
 import importlib
 from itertools import product
+import matplotlib.pyplot as plt
+import numpy as np
+
 
 import yaml
 
@@ -15,15 +18,76 @@ def load_config(path):
 
 ###########data analysis functions
 
-def print_statistics(correct):
+def interpret(a):
+    d = { 'Correlation:' : a[0] + a[7], 
+          'Misspecification': a[3],
+          'Self-Correction': a[2],
+          'Self-Degradation': a[1] + a[5],
+          'Memorization': a[6], 
+          'Hard-Coding': a[4] 
+        }
+    return d
+
+def plot_grouped_bar_chart(dict_list, group_labels=None, title="Grouped Bar Chart"):
+    """
+    Plots a grouped bar chart from a list of dictionaries.
+
+    Parameters:
+    - dict_list: List[Dict[str, float]] – list of dictionaries with same keys
+    - group_labels: Optional[List[str]] – custom labels for each group (same length as dict_list)
+    - title: str – plot title
+    """
+    if not dict_list:
+        raise ValueError("Input list is empty.")
+    
+    keys = list(dict_list[0].keys())
+    num_keys = len(keys)
+    num_groups = len(dict_list)
+    
+    # Validate that all dicts have the same keys
+    for d in dict_list:
+        if set(d.keys()) != set(keys):
+            raise ValueError("All dictionaries must have the same keys.")
+    
+    # Data matrix: rows = groups, columns = keys
+    data = np.array([[d[k] for k in keys] for d in dict_list])
+
+    # X positions for groups
+    x = np.arange(num_groups)
+    bar_width = 0.8 / num_keys  # fit all bars within group width
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Plot bars for each key
+    for i, key in enumerate(keys):
+        ax.bar(x + i * bar_width, data[:, i], width=bar_width, label=key)
+
+    # X-axis labels
+    if group_labels is None:
+        group_labels = [f"Group {i+1}" for i in range(num_groups)]
+    ax.set_xticks(x + bar_width * (num_keys - 1) / 2)
+    ax.set_xticklabels(group_labels)
+
+    # Labels and legend
+    ax.set_ylabel("Value")
+    ax.set_title(title)
+    ax.legend()
+    plt.tight_layout()
+    plt.show()
+
+def get_statistics(correct):
     print('Bayes :', count_rows_matching_pattern(correct, [ True, '*', '*' ]))
     print('f(S-x):', count_rows_matching_pattern(correct, [ '*', True, '*' ]))
     print('f(S  ):', count_rows_matching_pattern(correct, [ '*', '*', True ]))
 
     options = [True, False]
-
+    result = []
+    
     for combo in product(options, repeat=3):
         print(list(combo), count_rows_matching_pattern(correct, list(combo)))
+        result.append(count_rows_matching_pattern(correct, list(combo)))
+    return result
+
 
 def analyze_data(dataset_name, directory, model, K):
     #first load the various statistics and real labels
